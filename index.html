@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dictionary Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .game { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        h1 { text-align: center; color: #7c3aed; margin-bottom: 20px; }
+        input, button { padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { background: #7c3aed; color: white; cursor: pointer; border: none; }
+        button:hover { background: #6d28d9; }
+        .word { padding: 15px; margin: 8px 0; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; }
+        .word:hover { background: #f3f4f6; }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h1>📖 Dictionary Game</h1>
+        <div id="content">
+            <p>Add players to start:</p>
+            <input type="text" id="playerName" placeholder="Enter player name">
+            <button onclick="addPlayer()">Add Player</button>
+            <div id="players"></div>
+        </div>
+    </div>
+    <script>
+        let players = [];
+        let currentPlayer = 0;
+        let gamePhase = 'setup';
+        let selectedWord = null;
+        
+        const words = [
+            {word: "apple", def: "Red or green fruit that grows on trees"},
+            {word: "elephant", def: "Large gray animal with trunk and big ears"},
+            {word: "bicycle", def: "Two-wheeled vehicle you pedal with your feet"},
+            {word: "rainbow", def: "Colorful arc that appears in sky after rain"},
+            {word: "chocolate", def: "Sweet brown candy made from cocoa beans"},
+            {word: "butterfly", def: "Flying insect with colorful wings"},
+            {word: "computer", def: "Electronic device for processing information"},
+            {word: "volcano", def: "Mountain that can erupt with lava"},
+            {word: "basketball", def: "Sport where you shoot ball through hoops"},
+            {word: "waterfall", def: "Water falling down from high place"},
+            {word: "telescope", def: "Tool to see stars and planets far away"},
+            {word: "adventure", def: "Exciting journey with some danger"},
+            {word: "friendship", def: "Close caring relationship between people"},
+            {word: "detective", def: "Person who solves crimes and mysteries"},
+            {word: "submarine", def: "Ship that travels underwater"}
+        ];
+        function addPlayer() {
+            const input = document.getElementById('playerName');
+            const name = input.value.trim();
+            if (name && players.length < 6) {
+                players.push({name: name, score: 0});
+                input.value = '';
+                updateDisplay();
+            }
+        }
+        function removePlayer(index) {
+            players.splice(index, 1);
+            updateDisplay();
+        }
+        function startGame() {
+            if (players.length >= 2) {
+                gamePhase = 'browse';
+                updateDisplay();
+            }
+        }
+        function selectWord(word) {
+            selectedWord = word;
+            gamePhase = 'clue';
+            updateDisplay();
+        }
+        function showDefinition() {
+            gamePhase = 'guess';
+            updateDisplay();
+        }
+        function submitGuess() {
+            const input = document.getElementById('guessInput');
+            const guess = input.value.trim().toLowerCase();
+            
+            if (guess === selectedWord.word.toLowerCase()) {
+                players[currentPlayer].score++;
+                alert(players[currentPlayer].name + ' got it right!');
+            } else {
+                currentPlayer = (currentPlayer + 1) % players.length;
+                alert('Wrong! ' + players[currentPlayer].name + "'s turn now.");
+            }
+            
+            gamePhase = 'browse';
+            updateDisplay();
+        }
+        function updateDisplay() {
+            const content = document.getElementById('content');
+            
+            if (gamePhase === 'setup') {
+                let html = '<p>Add players to start:</p>';
+                html += '<input type="text" id="playerName" placeholder="Enter player name">';
+                html += '<button onclick="addPlayer()">Add Player</button>';
+                html += '<div id="players">';
+                
+                players.forEach((player, i) => {
+                    html += '<div style="display:flex; justify-content:space-between; padding:8px; background:#f8f9fa; margin:5px 0; border-radius:5px;">';
+                    html += '<span>' + player.name + '</span>';
+                    html += '<span style="color:red; cursor:pointer;" onclick="removePlayer(' + i + ')">×</span>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                
+                if (players.length >= 2) {
+                    html += '<button onclick="startGame()" style="width:100%; background:#10b981;">🎮 Start Game</button>';
+                }
+                
+                content.innerHTML = html;
+            }
+            
+            else if (gamePhase === 'browse') {
+                let html = '<h3>' + players[currentPlayer].name + ', choose your word!</h3>';
+                html += '<div style="max-height:300px; overflow-y:auto;">';
+                
+                words.forEach(word => {
+                    html += '<div class="word" onclick="selectWord({word:\'' + word.word + '\', def:\'' + word.def + '\'})">';
+                    html += '<strong>' + word.word + '</strong><br>';
+                    html += '<small style="color:#666;">' + word.def + '</small>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                content.innerHTML = html;
+            }
+            
+            else if (gamePhase === 'clue') {
+                let html = '<h3>' + players[currentPlayer].name + "'s Turn</h3>";
+                html += '<div style="background:#fef3c7; padding:15px; border-radius:8px; text-align:center; margin:15px 0;">';
+                html += '<strong>Starts with "' + selectedWord.word[0].toUpperCase() + '" and ends with "' + selectedWord.word[selectedWord.word.length-1].toLowerCase() + '"</strong>';
+                html += '</div>';
+                html += '<button onclick="showDefinition()" style="width:100%; background:#3b82f6;">📖 Show Definition</button>';
+                content.innerHTML = html;
+            }
+            
+            else if (gamePhase === 'guess') {
+                let html = '<h3>Time to Guess!</h3>';
+                html += '<div style="background:#dbeafe; padding:15px; border-radius:8px; margin:15px 0;">';
+                html += '<strong>' + selectedWord.def + '</strong>';
+                html += '</div>';
+                html += '<input type="text" id="guessInput" placeholder="Type your guess..." style="width:100%; margin-bottom:10px;">';
+                html += '<button onclick="submitGuess()" style="width:100%; background:#10b981;">✅ Submit Guess</button>';
+                content.innerHTML = html;
+            }
+            
+            // Add scores at top if game started
+            if (gamePhase !== 'setup') {
+                let scoreHtml = '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px;">';
+                players.forEach((player, i) => {
+                    scoreHtml += '<div style="text-align:center; padding:10px; border-radius:8px; ' + 
+                        (i === currentPlayer ? 'background:#e0e7ff; border:2px solid #7c3aed;' : 'background:#f8f9fa;') + '">';
+                    scoreHtml += '<div style="font-weight:bold;">' + player.name + '</div>';
+                    scoreHtml += '<div style="font-size:24px; color:#7c3aed;">' + player.score + '</div>';
+                    scoreHtml += '</div>';
+                });
+                scoreHtml += '</div>';
+                content.innerHTML = scoreHtml + content.innerHTML;
+            }
+        }
+        // Initialize
+        updateDisplay();
+        
+        // Add Enter key support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (gamePhase === 'setup' && document.getElementById('playerName')) {
+                    addPlayer();
+                } else if (gamePhase === 'guess' && document.getElementById('guessInput')) {
+                    submitGuess();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
